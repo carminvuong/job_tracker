@@ -4,8 +4,6 @@ genuinely for personal use - I am too forgetful to keep track of j*bs/internship
 
 also the online ones aren't that good...
 
-Paste a job posting URL and it auto-fills the role/company (via Claude) into a tracking dashboard.
-
 ## Stack
 
 Next.js (App Router, TS) · Drizzle ORM · Neon Postgres · Anthropic API · Tailwind + shadcn/ui · deployed on Vercel.
@@ -14,7 +12,7 @@ Next.js (App Router, TS) · Drizzle ORM · Neon Postgres · Anthropic API · Tai
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in DATABASE_URL, ANTHROPIC_API_KEY, APP_PASSWORD
+cp .env.example .env.local   # fill in DATABASE_URL, APP_PASSWORD
 npm run db:push              # push schema to your Neon database
 npm run dev
 ```
