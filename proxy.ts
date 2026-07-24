@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { COOKIE_NAME, isValidAuthCookie } from "@/lib/auth";
+import { isDemoMode } from "@/lib/demo";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const isLoginPage = request.nextUrl.pathname === "/login";
+
+  if (isDemoMode()) {
+    if (isLoginPage) return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.next();
+  }
+
   const cookie = request.cookies.get(COOKIE_NAME)?.value;
   const valid = await isValidAuthCookie(cookie);
-  const isLoginPage = request.nextUrl.pathname === "/login";
 
   if (!valid && !isLoginPage) {
     return NextResponse.redirect(new URL("/login", request.url));

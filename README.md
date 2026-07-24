@@ -18,3 +18,13 @@ cp .env.example .env.local   # fill in DATABASE_URL, APP_PASSWORD
 npm run db:push              # push schema to your Neon database
 npm run dev
 ```
+
+## Public demo
+
+To share a read-only demo (e.g. with recruiters) without handing out your real password:
+
+1. Create a separate Neon database/branch and a second Vercel project pointing at this same repo.
+2. Set its env vars: a fresh `DATABASE_URL` for that database, and `DEMO_MODE=true` (`APP_PASSWORD` isn't needed).
+3. Run `npm run db:seed` against that database to load sample applications.
+
+With `DEMO_MODE=true` the password gate is skipped entirely and every write action (add, edit, delete, status/deadline changes, URL autofill) becomes a no-op that shows a toast instead — visitors can click around freely without touching real data or being able to spam the deployment.

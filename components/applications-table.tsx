@@ -60,13 +60,15 @@ export function ApplicationsTable({ applications, onEdit }: Props) {
 
   function handleStatusChange(application: Application, status: Status) {
     startTransition(async () => {
-      await updateApplicationStatus(application.id, status);
+      const result = await updateApplicationStatus(application.id, status);
+      if (!result.ok) toast.error(result.error);
     });
   }
 
   function handleDeadlineChange(application: Application, deadline: string) {
     startTransition(async () => {
-      await updateApplicationDeadline(application.id, deadline || null);
+      const result = await updateApplicationDeadline(application.id, deadline || null);
+      if (!result.ok) toast.error(result.error);
     });
   }
 
@@ -75,7 +77,11 @@ export function ApplicationsTable({ applications, onEdit }: Props) {
     const target = deleteTarget;
     setDeleteTarget(null);
     startTransition(async () => {
-      await deleteApplication(target.id);
+      const result = await deleteApplication(target.id);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
       toast.success(`Removed ${target.company} — ${target.role}`);
     });
   }

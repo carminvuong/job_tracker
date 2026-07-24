@@ -93,13 +93,15 @@ export function ApplicationDialog({ open, onOpenChange, application }: Props) {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     startSaving(async () => {
-      if (isEdit && application) {
-        await updateApplication(application.id, form);
-        toast.success("Application updated");
-      } else {
-        await createApplication(form);
-        toast.success("Application added");
+      const result = isEdit && application
+        ? await updateApplication(application.id, form)
+        : await createApplication(form);
+
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
+      toast.success(isEdit ? "Application updated" : "Application added");
       onOpenChange(false);
     });
   }
