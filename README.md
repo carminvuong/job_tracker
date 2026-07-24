@@ -12,10 +12,12 @@ Pasting a job URL auto-fills role/company by reading the page's JSON-LD `JobPost
 
 ## Setup
 
+This is for running it locally.
+
 ```bash
 npm install
 cp .env.example .env.local   # fill in DATABASE_URL, APP_PASSWORD
-npm run db:push              # push schema to your Neon database
+npm run db:push              # push schema to Neon database
 npm run dev
 ```
 
