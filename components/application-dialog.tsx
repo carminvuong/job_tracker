@@ -122,7 +122,7 @@ export function ApplicationDialog({ open, onOpenChange, application }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                 placeholder="https://..."
               />
-              <Button type="button" variant="outline" onClick={handleFetchDetails} disabled={isFetching}>
+              <Button type="button" variant="secondary" onClick={handleFetchDetails} disabled={isFetching}>
                 {isFetching ? "Fetching..." : "Fetch details"}
               </Button>
             </div>
