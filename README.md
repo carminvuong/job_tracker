@@ -1,8 +1,8 @@
-# job_tracker
+# job tracker
 
-genuinely for personal use - I am too forgetful to keep track of j*bs/internships I apply for.
+genuinely for personal use - I am too forgetful to keep track of jobs/internships I apply for.
 
-also the online ones aren't that good...
+also the online ones aren't that good... (they have too much stuff)
 
 ## Stack
 
