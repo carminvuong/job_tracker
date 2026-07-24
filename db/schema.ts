@@ -6,7 +6,6 @@ export const applicationStatusEnum = pgEnum("application_status", [
   "interview",
   "offer",
   "rejected",
-  "withdrawn",
 ]);
 
 export const applications = pgTable("applications", {
@@ -17,6 +16,7 @@ export const applications = pgTable("applications", {
   location: text("location"),
   status: applicationStatusEnum("status").notNull().default("applied"),
   dateApplied: date("date_applied").notNull().defaultNow(),
+  deadline: date("deadline"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

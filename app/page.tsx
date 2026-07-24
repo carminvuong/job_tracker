@@ -14,7 +14,7 @@ export default async function Home() {
     .orderBy(desc(applications.createdAt));
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">jobs + internships</h1>
         <form action={logout}>

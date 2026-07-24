@@ -1,6 +1,6 @@
 import type { Application } from "@/db/schema";
 
-export const STATUSES = ["applied", "oa", "interview", "offer", "rejected", "withdrawn"] as const;
+export const STATUSES = ["applied", "oa", "interview", "offer", "rejected"] as const;
 
 export type Status = Application["status"];
 
@@ -10,7 +10,6 @@ export const STATUS_LABELS: Record<Status, string> = {
   interview: "Interview",
   offer: "Offer",
   rejected: "Rejected",
-  withdrawn: "Withdrawn",
 };
 
 export const STATUS_BADGE_CLASS: Record<Status, string> = {
@@ -19,5 +18,7 @@ export const STATUS_BADGE_CLASS: Record<Status, string> = {
   interview: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
   offer: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   rejected: "bg-red-500/10 text-red-600 dark:text-red-400",
-  withdrawn: "bg-muted text-muted-foreground",
 };
+
+// Deadlines only make sense while a job is actively pending a next step.
+export const DEADLINE_STATUSES: Status[] = ["oa", "interview"];

@@ -6,7 +6,9 @@ also the online ones aren't that good... (they have too much stuff)
 
 ## Stack
 
-Next.js (App Router, TS) · Drizzle ORM · Neon Postgres · Anthropic API · Tailwind + shadcn/ui · deployed on Vercel.
+Next.js (App Router, TS) · Drizzle ORM · Neon Postgres · Tailwind + shadcn/ui · deployed on Vercel.
+
+Pasting a job URL auto-fills role/company by reading the page's JSON-LD `JobPosting` data (used by Greenhouse, Lever, Workday, etc.) with a plain meta-tag fallback — no LLM involved.
 
 ## Setup
 

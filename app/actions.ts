@@ -3,9 +3,9 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { applications, type NewApplication } from "@/db/schema";
-import { extractJobDetails, type ExtractedJobDetails } from "@/lib/anthropic";
-import { fetchPageText } from "@/lib/scrape";
+import { applications } from "@/db/schema";
+import { fetchJobInfo, type ExtractedJobDetails } from "@/lib/scrape";
+import type { Status } from "@/lib/status";
 
 export type ExtractResult =
   | ({ ok: true } & ExtractedJobDetails)
@@ -13,8 +13,7 @@ export type ExtractResult =
 
 export async function getExtractedJobInfo(url: string): Promise<ExtractResult> {
   try {
-    const text = await fetchPageText(url);
-    const details = await extractJobDetails(text);
+    const details = await fetchJobInfo(url);
     return { ok: true, ...details };
   } catch (err) {
     return {
@@ -29,8 +28,9 @@ export type ApplicationInput = {
   company: string;
   role: string;
   location?: string | null;
-  status: NewApplication["status"];
+  status: Status;
   dateApplied: string;
+  deadline?: string | null;
   notes?: string | null;
 };
 
@@ -42,6 +42,7 @@ export async function createApplication(input: ApplicationInput) {
     location: input.location || null,
     status: input.status,
     dateApplied: input.dateApplied,
+    deadline: input.deadline || null,
     notes: input.notes || null,
   });
   revalidatePath("/");
@@ -57,6 +58,7 @@ export async function updateApplication(id: string, input: ApplicationInput) {
       location: input.location || null,
       status: input.status,
       dateApplied: input.dateApplied,
+      deadline: input.deadline || null,
       notes: input.notes || null,
       updatedAt: new Date(),
     })
@@ -64,10 +66,18 @@ export async function updateApplication(id: string, input: ApplicationInput) {
   revalidatePath("/");
 }
 
-export async function updateApplicationStatus(id: string, status: NewApplication["status"]) {
+export async function updateApplicationStatus(id: string, status: Status) {
   await db
     .update(applications)
     .set({ status, updatedAt: new Date() })
+    .where(eq(applications.id, id));
+  revalidatePath("/");
+}
+
+export async function updateApplicationDeadline(id: string, deadline: string | null) {
+  await db
+    .update(applications)
+    .set({ deadline, updatedAt: new Date() })
     .where(eq(applications.id, id));
   revalidatePath("/");
 }

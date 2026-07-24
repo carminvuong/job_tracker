@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,8 +36,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteApplication, updateApplicationStatus } from "@/app/actions";
-import { STATUSES, STATUS_LABELS, STATUS_BADGE_CLASS, type Status } from "@/lib/status";
+import { deleteApplication, updateApplicationDeadline, updateApplicationStatus } from "@/app/actions";
+import { DEADLINE_STATUSES, STATUSES, STATUS_LABELS, STATUS_BADGE_CLASS, type Status } from "@/lib/status";
 import type { Application } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,14 @@ type Props = {
   onEdit: (application: Application) => void;
 };
 
+function deadlineClass(deadline: string | null): string {
+  if (!deadline) return "text-muted-foreground";
+  const daysLeft = (new Date(deadline).getTime() - new Date().setHours(0, 0, 0, 0)) / 86_400_000;
+  if (daysLeft < 0) return "text-red-600 dark:text-red-400 font-medium";
+  if (daysLeft <= 3) return "text-amber-600 dark:text-amber-400 font-medium";
+  return "text-muted-foreground";
+}
+
 export function ApplicationsTable({ applications, onEdit }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<Application | null>(null);
   const [, startTransition] = useTransition();
@@ -52,6 +61,12 @@ export function ApplicationsTable({ applications, onEdit }: Props) {
   function handleStatusChange(application: Application, status: Status) {
     startTransition(async () => {
       await updateApplicationStatus(application.id, status);
+    });
+  }
+
+  function handleDeadlineChange(application: Application, deadline: string) {
+    startTransition(async () => {
+      await updateApplicationDeadline(application.id, deadline || null);
     });
   }
 
@@ -84,6 +99,7 @@ export function ApplicationsTable({ applications, onEdit }: Props) {
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Applied</TableHead>
+              <TableHead>Deadline</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -115,6 +131,21 @@ export function ApplicationsTable({ applications, onEdit }: Props) {
                   </Select>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{application.dateApplied}</TableCell>
+                <TableCell>
+                  {DEADLINE_STATUSES.includes(application.status) ? (
+                    <Input
+                      type="date"
+                      value={application.deadline ?? ""}
+                      onChange={(e) => handleDeadlineChange(application, e.target.value)}
+                      className={cn(
+                        "h-7 w-36 border-none bg-transparent px-1.5 shadow-none",
+                        deadlineClass(application.deadline)
+                      )}
+                    />
+                  ) : (
+                    <span className="text-muted-foreground">{application.deadline || "—"}</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>

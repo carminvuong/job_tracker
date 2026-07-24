@@ -20,8 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createApplication, updateApplication, type ApplicationInput } from "@/app/actions";
-import { STATUSES, STATUS_LABELS, type Status } from "@/lib/status";
+import {
+  createApplication,
+  getExtractedJobInfo,
+  updateApplication,
+  type ApplicationInput,
+} from "@/app/actions";
+import { DEADLINE_STATUSES, STATUSES, STATUS_LABELS, type Status } from "@/lib/status";
 import type { Application } from "@/db/schema";
 
 type Props = {
@@ -39,6 +44,7 @@ function toFormState(application?: Application): ApplicationInput {
       location: "",
       status: "applied",
       dateApplied: new Date().toISOString().slice(0, 10),
+      deadline: "",
       notes: "",
     };
   }
@@ -49,6 +55,7 @@ function toFormState(application?: Application): ApplicationInput {
     location: application.location ?? "",
     status: application.status,
     dateApplied: application.dateApplied,
+    deadline: application.deadline ?? "",
     notes: application.notes ?? "",
   };
 }
@@ -56,7 +63,32 @@ function toFormState(application?: Application): ApplicationInput {
 export function ApplicationDialog({ open, onOpenChange, application }: Props) {
   const isEdit = Boolean(application);
   const [form, setForm] = useState<ApplicationInput>(() => toFormState(application));
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isFetching, startFetching] = useTransition();
   const [isSaving, startSaving] = useTransition();
+
+  function handleFetchDetails() {
+    if (!form.url) {
+      setFetchError("Paste a job posting URL first");
+      return;
+    }
+    setFetchError(null);
+    startFetching(async () => {
+      const result = await getExtractedJobInfo(form.url);
+      if (!result.ok) {
+        setFetchError(result.error);
+        toast.error(result.error);
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        company: result.company || prev.company,
+        role: result.role || prev.role,
+        location: result.location ?? prev.location,
+      }));
+      toast.success("Details fetched — review before saving");
+    });
+  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -81,14 +113,20 @@ export function ApplicationDialog({ open, onOpenChange, application }: Props) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="url">Job posting URL</Label>
-            <Input
-              id="url"
-              type="url"
-              required
-              value={form.url}
-              onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
-              placeholder="https://..."
-            />
+            <div className="flex gap-2">
+              <Input
+                id="url"
+                type="url"
+                required
+                value={form.url}
+                onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+                placeholder="https://..."
+              />
+              <Button type="button" variant="outline" onClick={handleFetchDetails} disabled={isFetching}>
+                {isFetching ? "Fetching..." : "Fetch details"}
+              </Button>
+            </div>
+            {fetchError ? <p className="text-sm text-destructive">{fetchError}</p> : null}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -151,6 +189,18 @@ export function ApplicationDialog({ open, onOpenChange, application }: Props) {
               </SelectContent>
             </Select>
           </div>
+
+          {DEADLINE_STATUSES.includes(form.status) ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="deadline">Deadline</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={form.deadline ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
+              />
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="notes">Notes</Label>

@@ -20,6 +20,7 @@ export function DashboardClient({ applications }: { applications: Application[] 
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingApplication, setEditingApplication] = useState<Application | undefined>(undefined);
+  const [addDialogNonce, setAddDialogNonce] = useState(0);
 
   const filtered = useMemo(
     () =>
@@ -31,6 +32,7 @@ export function DashboardClient({ applications }: { applications: Application[] 
 
   function openAddDialog() {
     setEditingApplication(undefined);
+    setAddDialogNonce((n) => n + 1);
     setDialogOpen(true);
   }
 
@@ -67,7 +69,7 @@ export function DashboardClient({ applications }: { applications: Application[] 
       <ApplicationsTable applications={filtered} onEdit={openEditDialog} />
 
       <ApplicationDialog
-        key={editingApplication?.id ?? "new"}
+        key={editingApplication?.id ?? `new-${addDialogNonce}`}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         application={editingApplication}

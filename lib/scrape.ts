@@ -1,8 +1,13 @@
 import * as cheerio from "cheerio";
+import type { CheerioAPI } from "cheerio";
 
-const MAX_CHARS = 8000;
+export type ExtractedJobDetails = {
+  company: string;
+  role: string;
+  location: string | null;
+};
 
-export async function fetchPageText(url: string): Promise<string> {
+async function fetchHtml(url: string): Promise<string> {
   const parsed = new URL(url);
   if (!/^https?:$/.test(parsed.protocol)) {
     throw new Error("URL must be http or https");
@@ -22,34 +27,103 @@ export async function fetchPageText(url: string): Promise<string> {
     throw new Error(`Failed to fetch job posting (status ${res.status})`);
   }
 
-  const html = await res.text();
-  const $ = cheerio.load(html);
+  return res.text();
+}
 
-  const jsonLd = $('script[type="application/ld+json"]')
+// Most ATS platforms (Greenhouse, Lever, Workday, etc.) embed schema.org
+// JobPosting JSON-LD for Google/LinkedIn indexing — read that directly
+// rather than guessing from visible page text.
+function extractFromJsonLd($: CheerioAPI): ExtractedJobDetails | null {
+  const scripts = $('script[type="application/ld+json"]')
     .map((_, el) => $(el).text())
-    .get()
-    .join("\n");
+    .get();
 
-  const title = $("title").text();
-  const ogTitle = $('meta[property="og:title"]').attr("content") ?? "";
-  const ogSiteName = $('meta[property="og:site_name"]').attr("content") ?? "";
+  for (const raw of scripts) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      continue;
+    }
 
-  $("script, style, noscript, svg").remove();
-  const bodyText = $("body").text().replace(/\s+/g, " ").trim();
+    const graph = parsed as { "@graph"?: unknown[] };
+    const candidates = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(graph?.["@graph"])
+        ? graph["@graph"]!
+        : [parsed];
 
-  const combined = [
-    `Page title: ${title}`,
-    ogTitle ? `OG title: ${ogTitle}` : "",
-    ogSiteName ? `OG site name: ${ogSiteName}` : "",
-    jsonLd ? `JSON-LD:\n${jsonLd}` : "",
-    `Body text:\n${bodyText}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+    for (const item of candidates) {
+      if (!item || typeof item !== "object") continue;
+      const obj = item as Record<string, unknown>;
+      const type = obj["@type"];
+      const isJobPosting = type === "JobPosting" || (Array.isArray(type) && type.includes("JobPosting"));
+      if (!isJobPosting) continue;
 
-  if (!combined.trim()) {
-    throw new Error("Page returned no readable content");
+      const role = typeof obj.title === "string" ? obj.title.trim() : "";
+
+      let company = "";
+      const org = obj.hiringOrganization as { name?: unknown } | string | undefined;
+      if (typeof org === "string") company = org.trim();
+      else if (org && typeof org.name === "string") company = org.name.trim();
+
+      let location: string | null = null;
+      const rawLocation = obj.jobLocation;
+      const jobLocation = Array.isArray(rawLocation) ? rawLocation[0] : rawLocation;
+      const address = (jobLocation as { address?: Record<string, unknown> } | undefined)?.address;
+      if (address) {
+        location =
+          [address.addressLocality, address.addressRegion, address.addressCountry]
+            .filter((part): part is string => typeof part === "string" && part.length > 0)
+            .join(", ") || null;
+      }
+      if (!location && obj.jobLocationType === "TELECOMMUTE") location = "Remote";
+
+      if (role || company) {
+        return { company, role, location };
+      }
+    }
   }
 
-  return combined.slice(0, MAX_CHARS);
+  return null;
+}
+
+// Fallback for sites without structured data: pull the OpenGraph/page
+// title and split on common "Role at Company" / "Role - Company" patterns.
+function extractFromMeta($: CheerioAPI): ExtractedJobDetails {
+  const ogTitle = $('meta[property="og:title"]').attr("content")?.trim() ?? "";
+  const ogSiteName = $('meta[property="og:site_name"]').attr("content")?.trim() ?? "";
+  const pageTitle = $("title").text().trim();
+
+  const text = ogTitle || pageTitle;
+  let role = text;
+  let company = ogSiteName;
+
+  const separators = [" at ", " - ", " | ", " :: ", " — "];
+  for (const sep of separators) {
+    if (text.includes(sep)) {
+      const [first, second] = text.split(sep);
+      role = first.trim();
+      if (!company) company = second?.trim() ?? "";
+      break;
+    }
+  }
+
+  return { company, role, location: null };
+}
+
+export async function fetchJobInfo(url: string): Promise<ExtractedJobDetails> {
+  const html = await fetchHtml(url);
+  const $ = cheerio.load(html);
+
+  const fromJsonLd = extractFromJsonLd($);
+  if (fromJsonLd && (fromJsonLd.role || fromJsonLd.company)) {
+    return fromJsonLd;
+  }
+
+  const fromMeta = extractFromMeta($);
+  if (!fromMeta.role && !fromMeta.company) {
+    throw new Error("Could not find job details on this page — enter them manually");
+  }
+  return fromMeta;
 }
