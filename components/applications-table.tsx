@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   applications: Application[];
   onEdit: (application: Application) => void;
+  isFiltered?: boolean;
 };
 
 function deadlineClass(deadline: string | null): string {
@@ -54,7 +55,7 @@ function deadlineClass(deadline: string | null): string {
   return "text-muted-foreground";
 }
 
-export function ApplicationsTable({ applications, onEdit }: Props) {
+export function ApplicationsTable({ applications, onEdit, isFiltered }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<Application | null>(null);
   const [, startTransition] = useTransition();
 
@@ -89,7 +90,9 @@ export function ApplicationsTable({ applications, onEdit }: Props) {
   if (applications.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        No applications yet. Paste a job posting URL to add your first one.
+        {isFiltered
+          ? "No applications match your search."
+          : "No applications yet. Paste a job posting URL to add your first one."}
       </div>
     );
   }
