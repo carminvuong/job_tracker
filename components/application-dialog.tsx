@@ -27,6 +27,7 @@ import {
   type ApplicationInput,
 } from "@/app/actions";
 import { DEADLINE_STATUSES, STATUSES, STATUS_LABELS, type Status } from "@/lib/status";
+import { SPRING_BUTTON_CLASS } from "@/lib/utils";
 import type { Application } from "@/db/schema";
 
 type Props = {
@@ -124,7 +125,13 @@ export function ApplicationDialog({ open, onOpenChange, application }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                 placeholder="https://..."
               />
-              <Button type="button" variant="secondary" onClick={handleFetchDetails} disabled={isFetching}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleFetchDetails}
+                disabled={isFetching}
+                className={SPRING_BUTTON_CLASS}
+              >
                 {isFetching ? "Fetching..." : "Fetch details"}
               </Button>
             </div>
@@ -215,7 +222,7 @@ export function ApplicationDialog({ open, onOpenChange, application }: Props) {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving} className={SPRING_BUTTON_CLASS}>
               {isSaving ? "Saving..." : isEdit ? "Save changes" : "Add application"}
             </Button>
           </DialogFooter>

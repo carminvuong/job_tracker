@@ -14,6 +14,7 @@ import { ApplicationsTable } from "@/components/applications-table";
 import { ApplicationDialog } from "@/components/application-dialog";
 import { StatsStrip } from "@/components/stats-strip";
 import { STATUSES, STATUS_LABELS, type Status } from "@/lib/status";
+import { SPRING_BUTTON_CLASS } from "@/lib/utils";
 import type { Application } from "@/db/schema";
 
 export function DashboardClient({ applications }: { applications: Application[] }) {
@@ -59,7 +60,7 @@ export function DashboardClient({ applications }: { applications: Application[] 
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={openAddDialog}>
+          <Button onClick={openAddDialog} className={SPRING_BUTTON_CLASS}>
             <PlusIcon data-icon="inline-start" />
             Add application
           </Button>

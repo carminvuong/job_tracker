@@ -16,7 +16,7 @@ export default async function Home() {
     .orderBy(desc(applications.createdAt));
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-6">
       {demo ? (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
           Demo mode - sample data, changes aren&apos;t saved...  Hopefully, this is a good enough demo on what the app does!
