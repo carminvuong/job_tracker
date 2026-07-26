@@ -3,7 +3,9 @@ import { pgTable, uuid, text, date, timestamp, pgEnum } from "drizzle-orm/pg-cor
 export const applicationStatusEnum = pgEnum("application_status", [
   "applied",
   "oa",
+  "oa_done",
   "interview",
+  "interview_done",
   "offer",
   "rejected",
 ]);
