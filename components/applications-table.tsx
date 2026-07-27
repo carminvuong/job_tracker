@@ -39,7 +39,7 @@ import {
 import { deleteApplication, updateApplicationDeadline, updateApplicationStatus } from "@/app/actions";
 import { DEADLINE_STATUSES, STATUSES, STATUS_LABELS, STATUS_BADGE_CLASS, type Status } from "@/lib/status";
 import type { Application } from "@/db/schema";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 
 type Props = {
   applications: Application[];
@@ -139,7 +139,7 @@ export function ApplicationsTable({ applications, onEdit, isFiltered }: Props) {
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{application.dateApplied}</TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(application.dateApplied)}</TableCell>
                 <TableCell>
                   {DEADLINE_STATUSES.includes(application.status) ? (
                     <Input
@@ -152,7 +152,9 @@ export function ApplicationsTable({ applications, onEdit, isFiltered }: Props) {
                       )}
                     />
                   ) : (
-                    <span className="text-muted-foreground">{application.deadline || "—"}</span>
+                    <span className="text-muted-foreground">
+                      {application.deadline ? formatDate(application.deadline) : "—"}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell>
